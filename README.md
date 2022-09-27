@@ -1,3 +1,3 @@
 # DeepRL
 
-### Latest Version: DQN - PyTorch V3
+### Latest Version: DQN - PyTorch V4
