@@ -1,3 +1,3 @@
 # DeepRL
 
-### Latest Version: DQN - PyTorch V4
+### Latest Version(s): DQN - PyTorch V4, StableBaselines3_SAC
