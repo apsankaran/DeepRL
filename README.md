@@ -1,3 +1,3 @@
 # DeepRL
 
-### Latest Version(s): DQN - PyTorch V4, StableBaselines3_SAC
+### Latest Version(s): CustomSACModel.py, StableBaselines3_SAC.py
