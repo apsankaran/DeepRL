@@ -1,3 +1,3 @@
 # DeepRL
 
-### Latest Version(s): CustomSACModel.py, StableBaselines3_SAC.py
+### Latest Files: StableBaselines3_SAC.py, CustomSACModel.py, job.sh, job.sub
