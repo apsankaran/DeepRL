@@ -1,0 +1,36 @@
+# Python build file
+
+universe = vanilla
+
+executable = job.sh
+
+log = output/job.log
+
+output = output/job.out
+
+error = output/job.err
+
+# Choose a version of Python from the tables above
+
+# If building on CentOS 7 (To be Phased Out)
+
+# transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/chtc/python##.tar.gz
+
+# If building on CentOS 8 (Recommended)
+
+transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/apsankaran/research.tar.gz, CustomSACModel.py, StableBaselines3_SAC.py
+
++IsBuildJob = true
+
+# Indicate which version of Linux (CentOS) you want to build your packages on
+
+requirements = (OpSysMajorVer =?= 8)
+
+request_cpus = 1
+
+request_memory = 4GB
+
+request_disk = 2GB
+
+queue
+
