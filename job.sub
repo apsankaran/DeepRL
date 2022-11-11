@@ -18,13 +18,15 @@ error = output/job.err
 
 # If building on CentOS 8 (Recommended)
 
-transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/apsankaran/research.tar.gz, CustomSACModel.py, StableBaselines3_SAC.py
+transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/apsankaran/research1.tar.gz, CustomSACModel.py, StableBaselines3_SAC.py, job.sh
 
 +IsBuildJob = true
 
 # Indicate which version of Linux (CentOS) you want to build your packages on
 
-requirements = (OpSysMajorVer =?= 8)
+# requirements = (OpSysMajorVer =?= 8)
+
+requirements = (has_avx == True)
 
 request_cpus = 1
 

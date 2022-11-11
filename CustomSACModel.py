@@ -130,11 +130,32 @@ def phi_penalty(target_q_values, current_q_values):
     return loss
 
 # select loss function
-loss_function = default_loss_function
+loss_function = dr3
 
 outfile = None
 
 class CustomSAC(SAC):
+
+    SACSelf = TypeVar("SACSelf", bound="SAC")
+    TOTAL_TIMESTEPS = 1000
+    def learn(
+        self: SACSelf,
+        total_timesteps: TOTAL_TIMESTEPS,
+        callback: MaybeCallback = None,
+        log_interval: int = 4,
+        tb_log_name: str = "SAC",
+        reset_num_timesteps: bool = True,
+        progress_bar: bool = False,
+    ) -> SACSelf:
+
+        return super().learn(
+            total_timesteps=total_timesteps,
+            callback=callback,
+            log_interval=log_interval,
+            tb_log_name=tb_log_name,
+            reset_num_timesteps=reset_num_timesteps,
+            progress_bar=progress_bar,
+        )
 	
     def train(self, gradient_steps: int, batch_size: int = 64) -> None:
 
@@ -246,6 +267,7 @@ class CustomSAC(SAC):
                 results = (self._n_updates + gradient_step + 1, np.mean(episode_rewards), np.linalg.matrix_rank(phi_matrix_1), np.linalg.matrix_rank(phi_matrix_2))
                 with open(outfile, 'a') as f:
                     f.write(str(results) + '\n')
+                print(results)
                     
             # Compute actor loss
             # Alternative: actor_loss = th.mean(log_prob - qf1_pi)

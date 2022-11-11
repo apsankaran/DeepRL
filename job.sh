@@ -6,7 +6,7 @@ set -e
 
 # replace env-name on the right hand side of this line with the name of your conda environment
 
-ENVNAME=research
+ENVNAME=research1
 
 # if you need the environment directory to be named something other than the environment name, change this line
 
