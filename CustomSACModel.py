@@ -137,14 +137,14 @@ outfile = None
 class CustomSAC(SAC):
 
     SACSelf = TypeVar("SACSelf", bound="SAC")
-    TOTAL_TIMESTEPS = 1000
+    TOTAL_TIMESTEPS = 10
     def learn(
         self: SACSelf,
         total_timesteps: TOTAL_TIMESTEPS,
         callback: MaybeCallback = None,
         log_interval: int = 4,
         tb_log_name: str = "SAC",
-        reset_num_timesteps: bool = True,
+        reset_num_timesteps: bool = False,
         progress_bar: bool = False,
     ) -> SACSelf:
 
