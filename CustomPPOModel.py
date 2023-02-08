@@ -20,6 +20,7 @@ from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedul
 from stable_baselines3.common.utils import get_parameters_by_name, polyak_update
 from stable_baselines3.sac.policies import CnnPolicy, MlpPolicy, MultiInputPolicy, SACPolicy
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.utils import safe_mean
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
@@ -27,10 +28,32 @@ from stable_baselines3.common.policies import ActorCriticCnnPolicy, ActorCriticP
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
 from stable_baselines3.common.utils import explained_variance, get_schedule_fn
 
+random_seed = 0
+
+th.manual_seed(random_seed)
+np.random.seed(random_seed)
+random.seed(random_seed)
+
+BATCH_SIZE = None
+REGULARIZATION_COEFFICIENT = 0.05 # Regularization Coefficient for Custom Loss Functions
+phi_matrix_1 = [] # phi matrix for model 1
+phi_matrix_2 = [] # phi matrix for model 2
+observations_t = None # current state observations
+new_observations_t = None # next state observations
+online_net = None # online network (not target net)
+all_ranks_1 = []
+all_ranks_2 = []
+
+# get phi matrix tensor for model and observations+actions
+# pass num=1 for first model, num=2 for second model
+def get_phi(model, observations_t, num=1):
+    layers = [module for module in model.modules() if not isinstance(module, th.nn.Sequential)]
+    observations = layers[2](observations_t[0])
+    phi_matrix = layers[7+4*(num-1)](layers[6+4*(num-1)](layers[5+4*(num-1)](layers[4+4*(num-1)](observations.float()))))
+    return phi_matrix
+
 SelfPPO = TypeVar("SelfPPO", bound="PPO")
-
 outfile = None
-
 class CustomPPO(PPO):
     
     def train(self) -> None:
@@ -74,6 +97,11 @@ class CustomPPO(PPO):
                 # Normalization does not make sense if mini batchsize == 1, see GH issue #325
                 if self.normalize_advantage and len(advantages) > 1:
                     advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+
+                global observations_t, new_observations_t, online_net
+                observations_t = (rollout_data.observations, actions)
+                # new_observations_t = (replay_data.next_observations, next_actions)
+                online_net = self.policy
 
                 # ratio between old and new policy, should be one at the first iteration
                 ratio = th.exp(log_prob - rollout_data.old_log_prob)
@@ -134,15 +162,22 @@ class CustomPPO(PPO):
                 th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.step()
 
-            # Compute Episode Rewards
-            def callback_func(self, locals_=None, globals_=None):
-                pass
-            update_freq = 10
+                # compute phi_matrix
+                # Compute phi matrix for model 1
+                global phi_matrix_1
+                phi_matrix_1 = get_phi(self.policy, observations_t, 1)
+                phi_matrix_1 = phi_matrix_1.cpu().detach().numpy()
+            
+                # Compute phi matrix for model 2
+                global phi_matrix_2
+                phi_matrix_2 = get_phi(self.policy, observations_t, 2)
+                phi_matrix_2 = phi_matrix_2.cpu().detach().numpy()
+
+            # Retrieve Episode Rewards
+            update_freq = 16
             if self._n_updates + epoch == 0 or (self._n_updates + epoch + 1) % update_freq == 0:
-                self.n_eval_episodes = 1
-                episode_rewards, episode_lengths = evaluate_policy (self.policy, self.env, n_eval_episodes=self.n_eval_episodes, render=False, deterministic=True, return_episode_rewards=True, warn=True, callback=callback_func)
-                results = (self._n_updates + epoch + 1, np.mean(episode_rewards))
-                print(results)
+                results = safe_mean([ep_info["r"] for ep_info in self.ep_info_buffer])
+                print(self._n_updates + epoch + 1, results, np.linalg.matrix_rank(phi_matrix_1), np.linalg.matrix_rank(phi_matrix_2))
 
             if not continue_training:
                 break

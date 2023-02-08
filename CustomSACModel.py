@@ -19,6 +19,7 @@ from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedul
 from stable_baselines3.common.utils import get_parameters_by_name, polyak_update
 from stable_baselines3.sac.policies import CnnPolicy, MlpPolicy, MultiInputPolicy, SACPolicy
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.utils import safe_mean
 from stable_baselines3 import SAC
 
 random_seed = 0
@@ -56,7 +57,7 @@ def default_loss_function(target_q_values, current_q_values):
 # add dot product between each state action and subsequent one’s feature vector to loss
 def dr3(target_q_values, current_q_values):
     
-    global observations_t, new_observations_t, online_net, BATCHS_SIZE
+    global observations_t, new_observations_t, online_net, BATCH_SIZE
     
     loss = th.mean(th.square(target_q_values-current_q_values))
         
@@ -134,19 +135,21 @@ loss_function = dr3
 
 outfile = None
 
+SelfSAC = TypeVar("SelfSAC", bound="SAC")
+
 class CustomSAC(SAC):
 
-    SACSelf = TypeVar("SACSelf", bound="SAC")
-    TOTAL_TIMESTEPS = 10
     def learn(
-        self: SACSelf,
-        total_timesteps: TOTAL_TIMESTEPS,
+        self: SelfSAC,
+        total_timesteps: int,
         callback: MaybeCallback = None,
-        log_interval: int = 4,
+        log_interval: int = 1,
         tb_log_name: str = "SAC",
-        reset_num_timesteps: bool = False,
+        reset_num_timesteps: bool = True,
         progress_bar: bool = False,
-    ) -> SACSelf:
+    ) -> SelfSAC:
+
+        print("learn")
 
         return super().learn(
             total_timesteps=total_timesteps,
@@ -257,14 +260,10 @@ class CustomSAC(SAC):
             phi_matrix_2 = phi_matrix_2.cpu().detach().numpy()
 
             # Compute Episode Rewards
-            def callback_func(self, locals_=None, globals_=None):
-                pass
-
-            update_freq = 100
+            update_freq = 10
             if self._n_updates + gradient_step == 0 or (self._n_updates + gradient_step + 1) % update_freq == 0:
-                self.n_eval_episodes = 10
-                episode_rewards, episode_lengths = evaluate_policy (self.policy, self.env, n_eval_episodes=self.n_eval_episodes, render=False, deterministic=True, return_episode_rewards=True, warn=True, callback=callback_func)
-                results = (self._n_updates + gradient_step + 1, np.mean(episode_rewards), np.linalg.matrix_rank(phi_matrix_1), np.linalg.matrix_rank(phi_matrix_2))
+                mean_ep_rewards = safe_mean([ep_info["r"] for ep_info in self.ep_info_buffer])
+                results = (self._n_updates + gradient_step + 1, mean_ep_rewards, np.linalg.matrix_rank(phi_matrix_1), np.linalg.matrix_rank(phi_matrix_2), len(self.ep_info_buffer))
                 with open(outfile, 'a') as f:
                     f.write(str(results) + '\n')
                 print(results)

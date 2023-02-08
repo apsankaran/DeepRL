@@ -38,4 +38,4 @@ pip install git+https://github.com/carlosluis/stable-baselines3@fix_tests
 
 # run your script
 
-python3 StableBaselines3_SAC.py
+python3 StableBaselines3.py

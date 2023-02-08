@@ -1,3 +1,3 @@
 # DeepRL
 
-### Latest Files: StableBaselines3_SAC.py, CustomSACModel.py, job.sh, job.sub
+### Latest Version(s): DQN - PyTorch V4, StableBaselines3_SAC
