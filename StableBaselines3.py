@@ -7,7 +7,6 @@ import numpy as np
 import os
 
 from stable_baselines3.common.monitor import Monitor
-from CustomSACModel import CustomSAC
 from CustomPPOModel2 import CustomPPO
 from CustomCallback import CustomCallback
 
@@ -27,7 +26,7 @@ custom_callback = CustomCallback(env, best_model_save_path="./logs/",
                              deterministic=True, render=False)
 
 model = CustomPPO('MlpPolicy', env, gae_lambda=0, verbose=1)
-model.learn(total_timesteps=1000, callback=custom_callback)
+model.learn(total_timesteps=4000000, callback=custom_callback)
 
 # get results
 env_name = env.unwrapped.spec.id
@@ -67,9 +66,9 @@ axis[2].set_xlabel("Timestep")
 axis[2].set_ylabel("Rank (Model 2)")
 axis[2].set_title(env_name)
 
-# show plots
+# show/save plots
 plt.show()
-plt.savefig('plots.png')
+plt.savefig(env_name + '_plots.png')
 
 # obs = env.reset()
 # while True:

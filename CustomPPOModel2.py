@@ -6,7 +6,8 @@ import torch as th
 from gym import spaces
 from torch.nn import functional as F
 
-from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
+# from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
+from CustomOnPolicyAlgorithm import CustomOnPolicyAlgorithm
 from stable_baselines3.common.policies import ActorCriticCnnPolicy, ActorCriticPolicy, BasePolicy, MultiInputActorCriticPolicy
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
 from stable_baselines3.common.utils import explained_variance, get_schedule_fn
@@ -16,7 +17,7 @@ SelfPPO = TypeVar("SelfPPO", bound="PPO")
 global observations_t
 observations_t = None
 
-class CustomPPO(OnPolicyAlgorithm):
+class CustomPPO(CustomOnPolicyAlgorithm):
     """
     Proximal Policy Optimization algorithm (PPO) (clip version)
     Paper: https://arxiv.org/abs/1707.06347
@@ -312,3 +313,7 @@ class CustomPPO(OnPolicyAlgorithm):
             reset_num_timesteps=reset_num_timesteps,
             progress_bar=progress_bar,
         )
+
+    def get_observations_t(self):
+        global observations_t
+        return observations_t

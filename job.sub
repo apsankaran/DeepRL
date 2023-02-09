@@ -18,7 +18,7 @@ error = output/job.err
 
 # If building on CentOS 8 (Recommended)
 
-transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/apsankaran/research1.tar.gz, CustomSACModel.py, StableBaselines3.py, CustomPPOModel.py, job.sh
+transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/apsankaran/research1.tar.gz, StableBaselines3.py, CustomPPOModel2.py, CustomOnPolicyAlgorithm.py, CustomCallback.py, job.sh
 
 +IsBuildJob = true
 

@@ -6,12 +6,17 @@ from typing import Union, List, Dict, Any, Optional
 
 import gym
 import numpy as np
+import torch as th
 
 from stable_baselines3.common.vec_env import VecEnv, sync_envs_normalization, DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback, EventCallback, BaseCallback
 
+global observations_t
+observations_t = None
+
 def get_phi(model, observations_t, num=1):
+    if observations_t == None: return th.Tensor([])
     layers = [module for module in model.modules() if not isinstance(module, th.nn.Sequential)]
     observations = layers[2](observations_t[0])
     phi_matrix = layers[7+4*(num-1)](layers[6+4*(num-1)](layers[5+4*(num-1)](layers[4+4*(num-1)](observations.float()))))
@@ -79,6 +84,21 @@ class CustomCallback(EvalCallback):
             os.makedirs(self.best_model_save_path, exist_ok=True)
         if self.log_path is not None:
             os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
+    
+    def on_step(self, obs_t) -> bool:
+        """
+        This method will be called by the model after each call to `env.step()`.
+        For child callback (of an `EventCallback`), this will be called
+        when the event is triggered.
+        :return: (bool) If the callback returns False, training is aborted early.
+        """
+        self.n_calls += 1
+        self.num_timesteps = self.model.num_timesteps
+
+        global observations_t
+        observations_t = obs_t
+
+        return self._on_step()
 
     def _on_step(self) -> bool:
 
@@ -93,9 +113,9 @@ class CustomCallback(EvalCallback):
                                                                return_episode_rewards=True)
 
             # calculate ranks
-            # rank1 = get_phi(self.model, self.observations_t, 1).cpu().detach().numpy() # rank for model 1
-            # rank2 = get_phi(self.model, self.observations_t, 2).cpu().detach().numpy() # rank for model 2
-            rank1, rank2 = 0, 0
+            global observations_t
+            rank1 = np.linalg.matrix_rank(get_phi(self.model.policy, observations_t, 1).cpu().detach().numpy()) # rank for model 1
+            rank2 = np.linalg.matrix_rank(get_phi(self.model.policy, observations_t, 2).cpu().detach().numpy()) # rank for model 2
 
             if self.log_path is not None:
                 self.evaluations_timesteps.append(self.num_timesteps)
