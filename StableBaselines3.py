@@ -25,7 +25,10 @@ custom_callback = CustomCallback(env, best_model_save_path="./logs/",
                              log_path="./logs/", eval_freq=500,
                              deterministic=True, render=False)
 
-model = CustomPPO('MlpPolicy', env, gae_lambda=0, verbose=1)
+
+n_epochs=64
+gae_lambda=1
+model = CustomPPO('MlpPolicy', env, n_epochs=n_epochs, gae_lambda=gae_lambda, verbose=1)
 model.learn(total_timesteps=4000000, callback=custom_callback)
 
 # get results
@@ -44,7 +47,7 @@ model1_ranks = [vals[0] for vals in ranks]
 model2_ranks = [vals[1] for vals in ranks]
 
 # plot results
-figure, axis = plt.subplots(3, 1)
+figure, axis = plt.subplots(3, 1, figsize=(15, 30))
 figure.tight_layout(pad=5.0)
 
 # reward vs. timesteps
@@ -68,7 +71,7 @@ axis[2].set_title(env_name)
 
 # show/save plots
 plt.show()
-plt.savefig(env_name + '_plots.png')
+plt.savefig('{}_lambda-{}_epochs-{}_plots.png'.format(env_name,gae_lambda,n_epochs))
 
 # obs = env.reset()
 # while True:
