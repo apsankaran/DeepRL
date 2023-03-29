@@ -80,8 +80,8 @@ def main():
         'timesteps': timesteps
     }
 
-    print(summary)
-    np.save(FLAGS.outfile, summary) 
+    # print(summary)
+    np.savez(FLAGS.outfile, summary) 
 
 if __name__ == '__main__':
     main()
