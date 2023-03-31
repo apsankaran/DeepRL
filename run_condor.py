@@ -20,7 +20,7 @@ parser.add_argument('--env_name', type = str, required = True)
 parser.add_argument('--num_timesteps', default = 4000000, type = int, required = True)
 
 # variables
-parser.add_argument('--num_trials', default = 5, type=int, help='The number of trials to launch.')
+parser.add_argument('--num_trials', default = 10, type=int, help='The number of trials to launch.')
 parser.add_argument('--condor', default = False, action='store_true', help='run experiments on condor')
 
 FLAGS = parser.parse_args()
@@ -62,13 +62,13 @@ def run_trial(gae_lambda, seed,
         submitFile += 'should_transfer_files = YES\n'
         submitFile += 'when_to_transfer_output = ON_EXIT\n'
 
-        setup_files = 'rpm, mujoco_setup.sh, http://proxy.chtc.wisc.edu/SQUID/apsankaran/research1.tar.gz'
+        setup_files = 'http://proxy.chtc.wisc.edu/SQUID/apsankaran/research1.tar.gz'
         # common_main_files = 'run_single_cont.py, continuous_density_ratio.py, estimators.py, policies.py, utils.py, run_single_learn_phi.py, learn_phi.py'
         common_main_files = 'StableBaselines3.py, CustomPPOModel2.py, CustomOnPolicyAlgorithm.py, CustomCallback.py'
         # domains = 'infinite_walker.py, walker, infinite_pusher.py, pusher, infinite_antumaze.py, antumaze, infinite_reacher.py, reacher, a2c_ppo_acktr'
-        domains = 'ant'
 
-        submitFile += 'transfer_input_files = {}, {}, {}\n'.format(setup_files, common_main_files, domains)
+        # submitFile += 'transfer_input_files = {}, {}, {}\n'.format(setup_files, common_main_files, domains)
+        submitFile += 'transfer_input_files = {}, {}\n'.format(setup_files, common_main_files)
         submitFile += 'requirements = (has_avx == True)\n'
         submitFile += 'request_cpus = 1\n'
         submitFile += 'request_memory = 5GB\n'
@@ -86,12 +86,12 @@ def run_trial(gae_lambda, seed,
         #cmd = 'bash -c "source activate root"' 
         subprocess.Popen(('conda run -n research ' + cmd).split())
 
-def _launch_trial(directory, gae_lambdas, seeds):
+def _launch_trial(gae_lambdas, seeds):
 
     global ct
     for gae_lambda in gae_lambdas:
         for seed in seeds:
-            outfile = "{}/env_{}_gae_lambda_{}_seed_{}".format(directory, FLAGS.env_name, gae_lambda, seed)
+            outfile = "env_{}_gae_lambda_{}_seed_{}".format(FLAGS.env_name, gae_lambda, seed)
             if os.path.exists(outfile):
                 continue
             run_trial(gae_lambda, seed, outfile, condor=FLAGS.condor)
@@ -111,7 +111,7 @@ def main():  # noqa
     seeds = [random.randint(0, 1e6) for _ in range(FLAGS.num_trials)]
     gae_lambdas = [0, 0.5, 1]
 
-    _launch_trial(directory, gae_lambdas, seeds)
+    _launch_trial(gae_lambdas, seeds)
 
     print('%d experiments ran.' % ct)
 

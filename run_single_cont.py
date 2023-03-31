@@ -49,7 +49,7 @@ def main():
     mkdr('logs')
     mkdr('output')
 
-    custom_callback = CustomCallback(env, best_model_save_path="./logs/",
+    custom_callback = CustomCallback(env, best_model_save_path=None,
                              log_path="./logs/", eval_freq=500,
                              deterministic=True, render=False)
 
@@ -81,7 +81,7 @@ def main():
     }
 
     # print(summary)
-    np.savez(FLAGS.outfile, summary) 
+    np.save(FLAGS.outfile, summary) 
 
 if __name__ == '__main__':
     main()
