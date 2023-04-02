@@ -17,7 +17,7 @@ parser.add_argument('result_directory', default = None, help='Directory to write
 
 # common setup
 parser.add_argument('--env_name', type = str, required = True)
-parser.add_argument('--num_timesteps', default = 4000000, type = int, required = True)
+parser.add_argument('--num_timesteps', default = 4000000, type = int)
 
 # variables
 parser.add_argument('--num_trials', default = 10, type=int, help='The number of trials to launch.')

@@ -53,7 +53,7 @@ def main():
                              log_path="./logs/", eval_freq=500,
                              deterministic=True, render=False)
 
-    n_epochs=10 # default=10 
+    n_epochs=10 # default=10
     model = CustomPPO('MlpPolicy', env, n_epochs=n_epochs, gae_lambda=gae_lambda, verbose=0)
     model.learn(total_timesteps=FLAGS.num_timesteps, callback=custom_callback)
 
