@@ -12,15 +12,27 @@ from stable_baselines3.common.vec_env import VecEnv, sync_envs_normalization, Du
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback, EventCallback, BaseCallback
 
+import pdb
+
 global observations_t
 observations_t = None
 
-def get_phi(model, observations_t, num=1):
-    if observations_t == None: return th.Tensor([])
+def get_phi(model, observations_t, num=2):
+    if observations_t == None: return 0
     layers = [module for module in model.modules() if not isinstance(module, th.nn.Sequential)]
     observations = layers[2](observations_t[0])
-    phi_matrix = layers[7+4*(num-1)](layers[6+4*(num-1)](layers[5+4*(num-1)](layers[4+4*(num-1)](observations.float()))))
-    return phi_matrix
+    phi_matrix = layers[4+4*(num-1)](observations.float())
+    # rank1 = np.linalg.matrix_rank(phi_matrix.cpu().detach().numpy())
+    rank1 = -1
+    phi_matrix = layers[5+4*(num-1)](layers[4+4*(num-1)](observations.float()))
+    # rank2 = np.linalg.matrix_rank(phi_matrix.cpu().detach().numpy())
+    rank2 = -1
+    phi_matrix = layers[6+4*(num-1)](layers[5+4*(num-1)](layers[4+4*(num-1)](observations.float())))
+    # rank3 = np.linalg.matrix_rank(phi_matrix.cpu().detach().numpy())
+    rank3 = -1
+    phi_matrix = layers[7+4*(num-1)](phi_matrix)
+    rank4 = np.linalg.matrix_rank(phi_matrix.cpu().detach().numpy())
+    return rank4
 
 class CustomCallback(EvalCallback):
     """
@@ -47,7 +59,7 @@ class CustomCallback(EvalCallback):
                  best_model_save_path: Optional[str] = None,
                  deterministic: bool = True,
                  render: bool = False,
-                 verbose: int = 1):
+                 verbose: int = 0):
         super(EvalCallback, self).__init__(callback_on_new_best, verbose=verbose)
         self.n_eval_episodes = n_eval_episodes
         self.eval_freq = eval_freq
@@ -114,14 +126,13 @@ class CustomCallback(EvalCallback):
 
             # calculate ranks
             global observations_t
-            rank1 = np.linalg.matrix_rank(get_phi(self.model.policy, observations_t, 1).cpu().detach().numpy()) # rank for model 1
-            rank2 = np.linalg.matrix_rank(get_phi(self.model.policy, observations_t, 2).cpu().detach().numpy()) # rank for model 2
+            rank = get_phi(self.model.policy, observations_t) # rank for value function
 
             if self.log_path is not None:
                 self.evaluations_timesteps.append(self.num_timesteps)
                 self.evaluations_results.append(episode_rewards)
                 self.evaluations_length.append(episode_lengths)
-                self.ranks.append((rank1, rank2))
+                self.ranks.append(rank)
                 np.savez(self.log_path, timesteps=self.evaluations_timesteps,
                          results=self.evaluations_results, ep_lengths=self.evaluations_length, ranks=self.ranks)
 
@@ -134,7 +145,7 @@ class CustomCallback(EvalCallback):
                 print("Eval num_timesteps={}, "
                       "episode_reward={:.2f} +/- {:.2f}".format(self.num_timesteps, mean_reward, std_reward))
                 print("Episode length: {:.2f} +/- {:.2f}".format(mean_ep_length, std_ep_length))
-                print("Ranks:", rank1, rank2)
+                print("Rank:", rank)
 
             if mean_reward > self.best_mean_reward:
                 if self.verbose > 0:
