@@ -98,6 +98,8 @@ class CustomPPO(CustomOnPolicyAlgorithm):
         device: Union[th.device, str] = "auto",
         _init_setup_model: bool = True,
     ):
+        global observations_t
+        observations_t = None
         super().__init__(
             policy,
             env,
